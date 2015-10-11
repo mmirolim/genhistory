@@ -38,10 +38,10 @@ var (
 )
 
 type Profile struct {
-	pid     int64     // auto incremented counter
-	email   string    // id@edg.com
-	edg     string    // email provider
-	regDate time.Time // registration date 2006 Jan 02 resolution is day
+	Pid     int64     // auto incremented counter
+	Email   string    // id@edg.com
+	Edg     string    // email provider
+	RegDate time.Time // registration date 2006 Jan 02 resolution is day
 }
 
 // NewProfile generates Profiles according to predefined
@@ -64,12 +64,18 @@ func NewProfile(lifeStarted bool) Profile {
 	// email format id@provider.com
 	mail := strconv.Itoa(int(id)) + "@" + dom + ".com"
 
-	return Profile{pid: id, regDate: reg, email: mail, edg: dom}
+	return Profile{Pid: id, RegDate: reg, Email: mail, Edg: dom}
 }
 
 type population struct {
 	m map[int]Profile
 	sync.Mutex
+}
+
+type Event struct {
+	Profile           // profile who generated event
+	Cost    float64   // can be 1 or 0.2
+	Date    time.Time // resolution is day, event occured date
 }
 
 func init() {
