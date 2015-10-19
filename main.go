@@ -3,13 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
-	"strconv"
-	"sync"
-	"sync/atomic"
 	"time"
-	"xr/ltv/gendata/datastore"
-
-	"github.com/leesper/go_rng"
 )
 
 var (
@@ -37,50 +31,9 @@ var (
 	lid int64 = 0
 )
 
-type Profile struct {
-	Pid     int64     // auto incremented counter
-	Email   string    // id@edg.com
-	Edg     string    // email provider
-	RegDate time.Time // registration date 2006 Jan 02 resolution is day
-}
-
-// NewProfile generates Profiles according to predefined
-// logic
-func NewProfile(lifeStarted bool) Profile {
-	var reg time.Time
-	// incr last user id
-	id := atomic.AddInt64(&lid, 1)
-	// if pre live population set same date
-	if !lifeStarted {
-		reg = epS.Add(-10 * 24 * time.Hour)
-	} else {
-		// if life started
-		reg = currentDate
-	}
-	// generate emails
-	// domains will have uniform distribution
-	uniProb := rng.NewUniformGenerator(time.Now().UnixNano())
-	dom := edg[uniProb.Int64n(int64(len(edg)))]
-	// email format id@provider.com
-	mail := strconv.Itoa(int(id)) + "@" + dom + ".com"
-
-	return Profile{Pid: id, RegDate: reg, Email: mail, Edg: dom}
-}
-
-type population struct {
-	m map[int]Profile
-	sync.Mutex
-}
-
-type Event struct {
-	Profile           // profile who generated event
-	Cost    float64   // can be 1 or 0.2
-	Date    time.Time // resolution is day, event occured date
-}
-
 func init() {
 	log.Println("connect to mongodb")
-	err := ds.Init("localhost:27017", "click_history")
+	err := mongo("localhost:27017", "click_history")
 	if err != nil {
 		log.Fatalln(err)
 	}
