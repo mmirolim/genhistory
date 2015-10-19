@@ -25,15 +25,19 @@ var (
 	// there are two types of click weights
 	adclick  = 1.0
 	conclick = 0.2
+	// chance of clicking adv
+	advcr = 0.70
 	// number of history days to generate
 	days = 42 // 6 weeks
 	// last user id
 	lid int64 = 0
+	// Population
+	Pop *Population
 )
 
 func init() {
 	log.Println("connect to mongodb")
-	err := mongo("localhost:27017", "click_history")
+	err := mongoInit("localhost:27017", "click_history")
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -44,7 +48,7 @@ func main() {
 	fmt.Println("start generation")
 	// on day 0 prepare population
 	// generate profiles
-	err = genProfiles(10)
+	Pop, err = NewPopulation(10, epS)
 	if err != nil {
 		log.Fatalln("profiles generation failed", err)
 	}
@@ -56,16 +60,6 @@ func main() {
 		}
 
 	}
-}
-
-// genProfiles creates random profiles and save collection
-// to mongodb
-func genProfiles(n int) error {
-	var err error
-	for i := 0; i < n; i++ {
-		log.Printf("%+v\n", NewProfile(false))
-	}
-	return err
 }
 
 // one day from site audience

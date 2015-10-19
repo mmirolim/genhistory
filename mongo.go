@@ -21,7 +21,7 @@ type Document interface {
 }
 
 // mongo initialize connection pool to db
-func mongo(host, db string, docs ...Document) (err error) {
+func mongoInit(host, db string, docs ...Document) (err error) {
 	// start pool of connectin to mongo db with 1 second timeout
 	msess, err = mgo.DialWithTimeout(host, time.Second)
 	if err != nil {
