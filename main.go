@@ -51,6 +51,7 @@ func main() {
 	// on day 0 prepare population
 	// generate profiles
 	Pop, err = NewPopulation(popSize, epS)
+	log.Println("generated population", Pop)
 	if err != nil {
 		log.Fatalln("profiles generation failed", err)
 	}
@@ -67,7 +68,32 @@ func main() {
 // one day from site audience
 func liveADay() error {
 	var err error
-	fmt.Println("Day number", currentDate)
+	var events []Event
+	var p Profile
+	log.Println("Day number", currentDate)
+	// range through population and let profiles to act
+	for i := 1; i <= popSize; i++ {
+		p = Pop.Get(int64(i))
+		events = p.Act(currentDate)
+		// update profile if status changed
+		if p.Status == StatusUnsub {
+			Pop.Add(p)
+			err = UpdateByPid(&p, p.Pid)
+			if err != nil {
+				log.Println(err)
+			}
+
+		}
+		log.Println("Events for PID", i, events)
+		// range over events and save them
+		for _, ev := range events {
+			err = Save(&ev)
+			if err != nil {
+				log.Println(err)
+			}
+		}
+
+	}
 	currentDate = currentDate.Add(24 * time.Hour)
 	return err
 }

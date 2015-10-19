@@ -63,7 +63,7 @@ func NewProfile(epochDate time.Time, currentDay int, edom string) Profile {
 	}
 	// email format id@provider.com
 	mail := strconv.Itoa(int(id)) + "@" + edom + ".com"
-	return Profile{Pid: id, RegDate: reg, Email: mail, Edg: edom}
+	return Profile{Pid: id, RegDate: reg, Email: mail, Edg: edom, Status: StatusAcitve}
 }
 
 type Population struct {
@@ -72,11 +72,10 @@ type Population struct {
 }
 
 // add profile to population
-func (pop *Population) Add(p Profile) error {
+func (pop *Population) Add(p Profile) {
 	pop.Lock()
 	pop.m[p.Pid] = p
 	pop.Unlock()
-	return Save(&p)
 }
 
 // RM remvoe profile from population
@@ -135,12 +134,18 @@ func (ev *Event) Index() []mgo.Index {
 }
 
 // Act generate slice of random events for a profile
-func (p *Profile) Act() []Event {
+func (p *Profile) Act(currentDate time.Time) []Event {
 	var evs []Event
+	if p.Pid == 0 || p.Status != 1 {
+		return evs
+	}
 	// bernoulli distribution for unsub event
 	unsubDist := rng.NewBernoulliGenerator(time.Now().UnixNano())
 	// check if unsubscibed with unsub chance
-	if !unsubDist.Bernoulli_P(ur) {
+	if unsubDist.Bernoulli_P(ur) {
+		// update profile status on unsub
+		p.Status = StatusUnsub
+		p.UnsubDate = currentDate
 		// gen one event for unsub
 		evs = append(evs, Event{*p, 0.0, currentDate, 2})
 		return evs
@@ -149,11 +154,12 @@ func (p *Profile) Act() []Event {
 	clickDist := rng.NewWeibullGenerator(time.Now().UnixNano())
 	nclicks := int(clickDist.Weibull(1, 1.5) * 3)
 	costDist := rng.NewBernoulliGenerator(time.Now().UnixNano())
-	clickCost := 1.0
+	// default click type is content
+	clickCost := 0.2
 	for i := 0; i < nclicks; i++ {
 		// what cost of click
-		if !costDist.Bernoulli_P(advcr) {
-			clickCost = 0.2
+		if costDist.Bernoulli_P(advcr) {
+			clickCost = 1.0
 		}
 		evs = append(evs, Event{*p, clickCost, currentDate, 1})
 	}
@@ -175,13 +181,12 @@ func NewPopulation(n int, startDate time.Time) (*Population, error) {
 		// generate emails
 		edom = edg[uniProb.Int64n(int64(len(edg)))]
 		p = NewProfile(startDate, 0, edom)
-		// save to persistent storage
+		// add to population
+		pop.Add(p)
 		err = Save(&p)
 		if err != nil {
 			return pop, err
 		}
-		// add to population
-		pop.Add(p)
 	}
 	return pop, nil
 }

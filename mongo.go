@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"time"
 
 	"gopkg.in/mgo.v2"
@@ -27,9 +28,12 @@ func mongoInit(host, db string, docs ...Document) (err error) {
 	if err != nil {
 		return
 	}
+	// set db to work with
+	mdb = db
 
 	// init indexes set for collections
 	for _, doc := range docs {
+		log.Println("ensure index for ", doc)
 		if err = EnsureIndex(doc); err != nil {
 			return
 		}
