@@ -163,7 +163,8 @@ func (p *Profile) Act() []Event {
 // NewPopulation generates N size population and
 // saves it to db
 func NewPopulation(n int, startDate time.Time) (*Population, error) {
-	var pop *Population
+	pop := &Population{}
+	pop.m = make(map[int64]Profile)
 	var p Profile
 	var edom string
 	var err error

@@ -28,7 +28,9 @@ var (
 	// chance of clicking adv
 	advcr = 0.70
 	// number of history days to generate
-	days = 42 // 6 weeks
+	days = 10 // 6 weeks
+	// population size
+	popSize = 10
 	// last user id
 	lid int64 = 0
 	// Population
@@ -37,7 +39,7 @@ var (
 
 func init() {
 	log.Println("connect to mongodb")
-	err := mongoInit("localhost:27017", "click_history")
+	err := mongoInit("localhost:27017", "ltv", &Profile{}, &Event{})
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -48,7 +50,7 @@ func main() {
 	fmt.Println("start generation")
 	// on day 0 prepare population
 	// generate profiles
-	Pop, err = NewPopulation(10, epS)
+	Pop, err = NewPopulation(popSize, epS)
 	if err != nil {
 		log.Fatalln("profiles generation failed", err)
 	}
@@ -65,6 +67,7 @@ func main() {
 // one day from site audience
 func liveADay() error {
 	var err error
-
+	fmt.Println("Day number", currentDate)
+	currentDate = currentDate.Add(24 * time.Hour)
 	return err
 }
