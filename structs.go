@@ -176,11 +176,18 @@ func NewPopulation(n int, startDate time.Time) (*Population, error) {
 	var err error
 	// domains will have uniform distribution
 	uniProb := rng.NewUniformGenerator(time.Now().UnixNano())
-
+	// number of registration date cohort is one tenth of population size
+	var cohortSize int = n / 10
 	for i := 0; i < n; i++ {
-		// generate emails
+		// set random email domains
 		edom = edg[uniProb.Int64n(int64(len(edg)))]
-		p = NewProfile(startDate, 0, edom)
+		// if new profile for cohort created set
+		// reg date as startdate
+		if i >= n-cohortSize {
+			p = NewProfile(startDate, 1, edom)
+		} else {
+			p = NewProfile(startDate, 0, edom)
+		}
 		// add to population
 		pop.Add(p)
 		err = Save(&p)

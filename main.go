@@ -30,7 +30,7 @@ var (
 	// number of history days to generate
 	days = 10 // 6 weeks
 	// population size
-	popSize = 10
+	popSize = 100
 	// last user id
 	lid int64 = 0
 	// Population
@@ -84,7 +84,6 @@ func liveADay() error {
 			}
 
 		}
-		log.Println("Events for PID", i, events)
 		// range over events and save them
 		for _, ev := range events {
 			err = Save(&ev)
