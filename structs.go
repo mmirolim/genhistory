@@ -50,20 +50,12 @@ func (p *Profile) Index() []mgo.Index {
 
 // NewProfile generates Profiles according to predefined
 // logic
-func NewProfile(epochDate time.Time, currentDay int, edom string) Profile {
-	var reg time.Time
+func NewProfile(epochDate, regDate time.Time, edom string) Profile {
 	// incr last user id
 	id := atomic.AddInt64(&lid, 1)
-	// if pre live population set same date
-	if currentDay == 0 {
-		reg = epochDate.Add(-10 * 24 * time.Hour)
-	} else {
-		// if life started
-		reg = currentDate
-	}
 	// email format id@provider.com
 	mail := strconv.Itoa(int(id)) + "@" + edom + ".com"
-	return Profile{Pid: id, RegDate: reg, Email: mail, Edg: edom, Status: StatusAcitve}
+	return Profile{Pid: id, RegDate: regDate, Email: mail, Edg: edom, Status: StatusAcitve}
 }
 
 type Population struct {
@@ -176,18 +168,14 @@ func NewPopulation(n int, startDate time.Time) (*Population, error) {
 	var err error
 	// domains will have uniform distribution
 	uniProb := rng.NewUniformGenerator(time.Now().UnixNano())
-	// number of registration date cohort is one tenth of population size
-	var cohortSize int = n / 10
+	regDate := startDate
 	for i := 0; i < n; i++ {
 		// set random email domains
 		edom = edg[uniProb.Int64n(int64(len(edg)))]
-		// if new profile for cohort created set
-		// reg date as startdate
-		if i >= n-cohortSize {
-			p = NewProfile(startDate, 1, edom)
-		} else {
-			p = NewProfile(startDate, 0, edom)
-		}
+		// distribute uniformly registration date of profiles in 10 days before
+		// start date
+		regDate = startDate.Add(-time.Duration(uniProb.Int64n(10)) * 24 * time.Hour)
+		p = NewProfile(startDate, regDate, edom)
 		// add to population
 		pop.Add(p)
 		err = Save(&p)

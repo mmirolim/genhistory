@@ -7,8 +7,6 @@ import (
 )
 
 var (
-	// population number
-	pN = 10000
 	// epoch start
 	epochStart = "2015-10-11"
 	epS, _     = time.Parse("2006-01-02", epochStart)
@@ -28,7 +26,7 @@ var (
 	// chance of clicking adv
 	advcr = 0.70
 	// number of history days to generate
-	days = 10 // 6 weeks
+	days = 20 // days to generate events
 	// population size
 	popSize = 100
 	// last user id
